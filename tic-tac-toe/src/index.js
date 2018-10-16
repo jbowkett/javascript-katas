@@ -30,16 +30,27 @@ class Board extends React.Component {
   handleClick(i) {
     //slice() creates a copy
     const squares = this.state.squares.slice();
-    squares[i] = this.state.xIsNext ? 'X': 'O';
-    this.setState({
-      squares:squares,
-      xIsNext: !this.state.xIsNext
-    });
+    const previouslyClicked = squares[i];
+    const someoneHasWon = calculateWinner(squares);
+    if(!someoneHasWon && !previouslyClicked){
+      squares[i] = this.state.xIsNext ? 'X': 'O';
+      this.setState({
+        squares: squares,
+        xIsNext: !this.state.xIsNext
+      });
+    }
   }
 
-  render() {
-    const status = 'Next player: '+(this.state.xIsNext? 'X': 'O');
 
+  render() {
+    let status;
+    const winner =  calculateWinner(this.state.squares);
+    if (winner){
+      status = '!! WINNER !!: '+winner;
+    }
+    else{
+      status = 'Next player: '+(this.state.xIsNext? 'X': 'O');
+    }
     return (
       <div>
         <div className="status">{status}</div>
@@ -85,3 +96,24 @@ ReactDOM.render(
   <Game />,
   document.getElementById('root')
 );
+
+function calculateWinner(boardSquares){
+  //todo: refactor this!...and cover with tests
+ const winningLines = [
+   [0, 1, 2], //top line
+   [3, 4, 5], //middle line
+   [6, 7, 8], //bottom line
+   [0, 3, 6], //top left vertical down
+   [1, 4, 7], //top middle vertical down
+   [2, 5, 8], //top right vertical down
+   [0, 4, 8], //top left to bottom right diagonal
+   [2, 4, 6], //top right to bottom left diagonal
+ ];
+ for(let i = 0; i< winningLines.length; i++){
+   const [a, b, c] = winningLines[i];
+   if(boardSquares[a] && boardSquares[a] === boardSquares[b] && boardSquares[a] === boardSquares[c]){
+     return boardSquares[a];
+   }
+ }
+ return null;
+}
