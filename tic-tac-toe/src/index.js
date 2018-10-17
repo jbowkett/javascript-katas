@@ -15,39 +15,35 @@ function Square(props) {
 
 class Board extends React.Component {
 
-
   render() {
-
-    function renderRow(props, range) {
-      function renderSquare(i) {
-        return <Square
-          key={i}
-          value={props.squaresState[i]}
-          onClick={() => props.onClick(i)}
-        />;
-      }
-      return range.map(
-        function (index) {
-          return renderSquare(index);
+    function renderBoardRow(props, range) {
+      function renderRow() {
+        function renderSquare(i) {
+          return <Square
+            key={i}
+            value={props.squaresState[i]}
+            onClick={() => props.onClick(i)}
+          />;
         }
-      );
+        return range.map(
+          function (index) {
+            return renderSquare(index);
+          }
+        );
+      }
+      return <div className="board-row">
+              {renderRow()}
+             </div>;
     }
 
     return (
       <div>
-        <div className="board-row">
-          {renderRow(this.props, [0, 1, 2])}
-        </div>
-        <div className="board-row">
-          {renderRow(this.props, [3, 4, 5])}
-        </div>
-        <div className="board-row">
-          {renderRow(this.props, [6, 7, 8])}
-        </div>
+        { renderBoardRow(this.props, [0, 1, 2]) }
+        { renderBoardRow(this.props, [3, 4, 5]) }
+        { renderBoardRow(this.props, [6, 7, 8]) }
       </div>
     );
   }
-
 }
 
 class Game extends React.Component {
