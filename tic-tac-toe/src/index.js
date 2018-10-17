@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 
+//why is this a function and not a class, again?
 function Square(props) {
   //what is props.onClick()??
   return (
@@ -13,35 +14,40 @@ function Square(props) {
 }
 
 class Board extends React.Component {
-  renderSquare(i) {
-    return <Square
-      value={this.props.squares[i]}
-      onClick={() => this.props.onClick(i)}
-    />;
-  }
 
 
   render() {
+
+    function renderRow(props, range) {
+      function renderSquare(i) {
+        return <Square
+          key={i}
+          value={props.squaresState[i]}
+          onClick={() => props.onClick(i)}
+        />;
+      }
+      return range.map(
+        function (index) {
+          return renderSquare(index);
+        }
+      );
+    }
+
     return (
       <div>
         <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
+          {renderRow(this.props, [0, 1, 2])}
         </div>
         <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
+          {renderRow(this.props, [3, 4, 5])}
         </div>
         <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
+          {renderRow(this.props, [6, 7, 8])}
         </div>
       </div>
     );
   }
+
 }
 
 class Game extends React.Component {
@@ -51,7 +57,7 @@ class Game extends React.Component {
     this.state = {
       history: [
         {
-          squares: Array(9).fill(null)
+          squaresStateArray: Array(9).fill(null)
         }
       ],
       xIsNext: true,
@@ -62,15 +68,15 @@ class Game extends React.Component {
   handleClick(i) {
     //slice() creates a copy
     const history = this.state.history;
-    const current = history[history.length - 1]
-    const squares = current.squares.slice();
-    const previouslyClicked = squares[i];
-    const someoneHasWon = calculateWinner(squares);
+    const currentMove = history[history.length - 1]
+    const currentMoveSquares = currentMove.squaresStateArray.slice();
+    const previouslyClicked = currentMoveSquares[i];
+    const someoneHasWon = calculateWinner(currentMoveSquares);
     if (!someoneHasWon && !previouslyClicked) {
-      squares[i] = this.state.xIsNext ? 'X' : 'O';
+      currentMoveSquares[i] = this.state.xIsNext ? 'X' : 'O';
       this.setState({
         history: history.concat([{
-          squares: squares,
+          squaresStateArray: currentMoveSquares,
         }]),
         xIsNext: !this.state.xIsNext,
         stepNumber: history.length
@@ -86,12 +92,12 @@ class Game extends React.Component {
   }
 
   render() {
-    const history = this.state.history;
-    const current = history[this.state.stepNumber];
-    const winner = calculateWinner(current.squares);
+    const allHistory = this.state.history;
+    const currentMove = allHistory[this.state.stepNumber];
+    const winner = calculateWinner(currentMove.squaresStateArray);
     const isGameOver = (this.state.stepNumber === 9);
 
-    const moves = history.map((step, move) => {
+    const moves = allHistory.map((step, move) => {
       const desc = move ?
         'Go to move #' + move :
         'Go to game start';
@@ -118,7 +124,7 @@ class Game extends React.Component {
       <div className="game">
         <div className="game-board">
           <Board
-            squares={current.squares}
+            squaresState={currentMove.squaresStateArray}
             onClick={(i) => this.handleClick(i)}
           />
         </div>
@@ -138,6 +144,7 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
+//why does this need the function keyword?
 function calculateWinner(boardSquares) {
   //todo: refactor this!...and cover with tests
   const winningLines = [
