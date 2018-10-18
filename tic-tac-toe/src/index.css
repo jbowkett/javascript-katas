@@ -37,6 +37,10 @@ ol, ul {
   background: lawngreen;
 }
 
+.selected-history{
+  font-weight:bold;
+}
+
 .square:focus {
   outline: none;
 }
