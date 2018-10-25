@@ -7,7 +7,7 @@ import './index.css';
 // doesn't need a separate render method
 function Square(props) {
   //what is props.onClick()?? - function passed in properties when the class
-  // is constructed
+  // is constructed in the <Square/> tag
   return (
     <button className={props.classNames} onClick={props.onClick}>
       {props.value}
@@ -15,8 +15,20 @@ function Square(props) {
   );
 }
 
+
 function Status(props){
-  return (<div>{props.msg}</div>);
+  const isGameOver = (props.selectedMoveNumber === 9);
+  let status;
+  if (props.winner) {
+    status = 'Congrats, the winner is:' + props.winner.winnerName;
+  }
+  else if (isGameOver) {
+    status = 'Game over - stalemate!'
+  }
+  else {
+    status = 'Next Player is: ' + (props.gameState.xIsNext ? 'X' : 'O');
+  }
+  return <div>{status}</div>;
 }
 
 class Board extends React.Component {
@@ -113,7 +125,6 @@ class Game extends React.Component {
 
     const winner = calculateWinner(selectedMove.squaresStateArray);
     const winningSquares =  winner ? winner.winningSquares : null;
-    let status = getStatus(selectedMoveNumber, winner, this.state);
 
     return (
       <div className="game">
@@ -125,7 +136,10 @@ class Game extends React.Component {
           />
         </div>
         <div className="game-info">
-          <Status msg={status}/>
+          <Status selectedMoveNumber={selectedMoveNumber}
+                  winner = {winner}
+                  gameState = {this.state}
+          />
           <ol>{moves}</ol>
         </div>
       </div>
@@ -157,22 +171,6 @@ ReactDOM.render(
   <Game/>,
   document.getElementById('root')
 );
-
-function getStatus(selectedMoveNumber, winner, gameState) {
-  const isGameOver = (selectedMoveNumber === 9);
-  let status;
-  if (winner) {
-    status = 'Congrats, the winner is:' + winner.winnerName;
-  }
-  else if (isGameOver) {
-    status = 'Game over - stalemate!'
-  }
-  else {
-    status = 'Next Player is: ' + (gameState.xIsNext ? 'X' : 'O');
-  }
-  return status;
-}
-
 
 //why does this need the function keyword?
 function calculateWinner(boardSquares) {
