@@ -3,14 +3,20 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 
-//why is this a function and not a class, again?
+//why is this a function and not a class, again?...I think because it
+// doesn't need a separate render method
 function Square(props) {
-  //what is props.onClick()??
+  //what is props.onClick()?? - function passed in properties when the class
+  // is constructed
   return (
     <button className={props.classNames} onClick={props.onClick}>
       {props.value}
     </button>
   );
+}
+
+function Status(props){
+  return (<div>{props.msg}</div>);
 }
 
 class Board extends React.Component {
@@ -50,6 +56,9 @@ class Board extends React.Component {
 }
 
 class Game extends React.Component {
+  moveDescriptions = ['(1,1)', '(1,2)', '(1,3)',
+                      '(2,1)', '(2,2)', '(2,3)',
+                      '(3,1)', '(3,2)', '(3,3)'];
 
   constructor(props) {
     super(props);
@@ -69,14 +78,11 @@ class Game extends React.Component {
     const history = this.state.history;
     const currentMove = history[history.length - 1];
     const currentMoveSquares = currentMove.squaresStateArray.slice();
-    const previouslyClicked = currentMoveSquares[i].squareOwner;
+    const squareAlreadyOwned = currentMoveSquares[i].squareOwner;
+
     const someoneHasWon = calculateWinner(currentMoveSquares);
 
-    const moveDescriptions = ['(1,1)', '(1,2)', '(1,3)',
-                              '(2,1)', '(2,2)', '(2,3)',
-                              '(3,1)', '(3,2)', '(3,3)'];
-
-    if (!someoneHasWon && !previouslyClicked) {
+    if (!someoneHasWon && !squareAlreadyOwned) {
       currentMoveSquares[i] = {
         squareOwner: this.state.xIsNext ? 'X' : 'O',
       };
@@ -84,7 +90,7 @@ class Game extends React.Component {
       this.setState({
         history: history.concat([{
           squaresStateArray: currentMoveSquares,
-          moveDescription: moveDescriptions[i]
+          moveDescription: this.moveDescriptions[i]
         }]),
         xIsNext: !this.state.xIsNext,
         stepNumber: history.length
@@ -103,49 +109,45 @@ class Game extends React.Component {
     const allHistory = this.state.history;
     const selectedMoveNumber = this.state.stepNumber;
     const selectedMove = allHistory[selectedMoveNumber];
+    const moves = this.getHistory(allHistory, selectedMoveNumber);
+
+    const winner = calculateWinner(selectedMove.squaresStateArray);
+    const winningSquares =  winner ? winner.winningSquares : null;
+    let status = getStatus(selectedMoveNumber, winner, this.state);
+
+    return (
+      <div className="game">
+        <div className="game-board">
+          <Board
+            squaresState = {selectedMove.squaresStateArray}
+            winningSquares = {winningSquares}
+            onClick = { (i) => this.handleClick(i) }
+          />
+        </div>
+        <div className="game-info">
+          <Status msg={status}/>
+          <ol>{moves}</ol>
+        </div>
+      </div>
+    );
+  }
+
+
+  getHistory(allHistory, selectedMoveNumber) {
     const moves = allHistory.map((step, moveNumber) => {
-      const style = moveNumber === selectedMoveNumber ? ' selected-history':'';
+      const style = moveNumber === selectedMoveNumber ? ' selected-history' : '';
 
       const desc = moveNumber ?
         'Go to move #' + (moveNumber + ' ' + allHistory[moveNumber].moveDescription) :
         'Go to game start';
       return (
         <li key={moveNumber}>
-          <button className={style} onClick={() => this.jumpTo(moveNumber)}>{desc}</button>
+          <button className={style}
+                  onClick={() => this.jumpTo(moveNumber)}>{desc}</button>
         </li>
       );
     });
-
-    const winner = calculateWinner(selectedMove.squaresStateArray);
-    const isGameOver = (selectedMoveNumber === 9);
-    let winningSquares = null;
-    let status;
-    if (winner) {
-      status = 'Congrats, the winner is:' + winner.winnerName;
-      winningSquares = winner.winningSquares;
-    }
-    else if(isGameOver){
-      status = 'Game over - stalemate!'
-    }
-    else {
-      status = 'Next Player is: ' + (this.state.xIsNext ? 'X' : 'O');
-    }
-
-    return (
-      <div className="game">
-        <div className="game-board">
-          <Board
-            squaresState={selectedMove.squaresStateArray}
-            winningSquares = {winningSquares}
-            onClick={(i) => this.handleClick(i)}
-          />
-        </div>
-        <div className="game-info">
-          <div>{status}</div>
-          <ol>{moves}</ol>
-        </div>
-      </div>
-    );
+    return moves;
   }
 }
 
@@ -155,6 +157,22 @@ ReactDOM.render(
   <Game/>,
   document.getElementById('root')
 );
+
+function getStatus(selectedMoveNumber, winner, gameState) {
+  const isGameOver = (selectedMoveNumber === 9);
+  let status;
+  if (winner) {
+    status = 'Congrats, the winner is:' + winner.winnerName;
+  }
+  else if (isGameOver) {
+    status = 'Game over - stalemate!'
+  }
+  else {
+    status = 'Next Player is: ' + (gameState.xIsNext ? 'X' : 'O');
+  }
+  return status;
+}
+
 
 //why does this need the function keyword?
 function calculateWinner(boardSquares) {
