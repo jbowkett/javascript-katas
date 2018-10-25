@@ -23,7 +23,7 @@ class Board extends React.Component {
           'square highlighted': 'square';
           return <Square
             key={i}
-            value={props.squaresState[i]}
+            value={props.squaresState[i].squareOwner}
             classNames={style}
             onClick={() => props.onClick(i)}
           />;
@@ -56,7 +56,7 @@ class Game extends React.Component {
     this.state = {
       history: [
         {
-          squaresStateArray: Array(9).fill(null)
+          squaresStateArray: Array(9).fill({squareOwner:null})
         }
       ],
       xIsNext: true,
@@ -69,13 +69,22 @@ class Game extends React.Component {
     const history = this.state.history;
     const currentMove = history[history.length - 1];
     const currentMoveSquares = currentMove.squaresStateArray.slice();
-    const previouslyClicked = currentMoveSquares[i];
+    const previouslyClicked = currentMoveSquares[i].squareOwner;
     const someoneHasWon = calculateWinner(currentMoveSquares);
+
+    const moveDescriptions = ['(1,1)', '(1,2)', '(1,3)',
+                              '(2,1)', '(2,2)', '(2,3)',
+                              '(3,1)', '(3,2)', '(3,3)'];
+
     if (!someoneHasWon && !previouslyClicked) {
-      currentMoveSquares[i] = this.state.xIsNext ? 'X' : 'O';
+      currentMoveSquares[i] = {
+        squareOwner: this.state.xIsNext ? 'X' : 'O',
+      };
+
       this.setState({
         history: history.concat([{
           squaresStateArray: currentMoveSquares,
+          moveDescription: moveDescriptions[i]
         }]),
         xIsNext: !this.state.xIsNext,
         stepNumber: history.length
@@ -93,20 +102,21 @@ class Game extends React.Component {
   render() {
     const allHistory = this.state.history;
     const selectedMoveNumber = this.state.stepNumber;
-    const currentMove = allHistory[selectedMoveNumber];
-    const moves = allHistory.map((step, move) => {
-      const style = move === selectedMoveNumber ? ' selected-history':'';
-      const desc = move ?
-        'Go to move #' + move :
+    const selectedMove = allHistory[selectedMoveNumber];
+    const moves = allHistory.map((step, moveNumber) => {
+      const style = moveNumber === selectedMoveNumber ? ' selected-history':'';
+
+      const desc = moveNumber ?
+        'Go to move #' + (moveNumber + ' ' + allHistory[moveNumber].moveDescription) :
         'Go to game start';
       return (
-        <li key={move}>
-          <button className={style} onClick={() => this.jumpTo(move)}>{desc}</button>
+        <li key={moveNumber}>
+          <button className={style} onClick={() => this.jumpTo(moveNumber)}>{desc}</button>
         </li>
       );
     });
 
-    const winner = calculateWinner(currentMove.squaresStateArray);
+    const winner = calculateWinner(selectedMove.squaresStateArray);
     const isGameOver = (selectedMoveNumber === 9);
     let winningSquares = null;
     let status;
@@ -125,7 +135,7 @@ class Game extends React.Component {
       <div className="game">
         <div className="game-board">
           <Board
-            squaresState={currentMove.squaresStateArray}
+            squaresState={selectedMove.squaresStateArray}
             winningSquares = {winningSquares}
             onClick={(i) => this.handleClick(i)}
           />
@@ -161,9 +171,14 @@ function calculateWinner(boardSquares) {
   ];
   for (let i = 0; i < winningLines.length; i++) {
     const [a, b, c] = winningLines[i];
-    if (boardSquares[a] && boardSquares[a] === boardSquares[b] && boardSquares[a] === boardSquares[c]) {
+    const boardSquaresAOwner = boardSquares[a].squareOwner;
+    const boardSquaresBOwner = boardSquares[b].squareOwner;
+    const boardSquaresCOwner = boardSquares[c].squareOwner;
+    if (boardSquaresAOwner &&
+        boardSquaresAOwner === boardSquaresBOwner &&
+        boardSquaresAOwner === boardSquaresCOwner) {
       return {
-        winnerName: boardSquares[a],
+        winnerName: boardSquares[a].squareOwner,
         winningSquares:[a, b, c]
       };
     }
