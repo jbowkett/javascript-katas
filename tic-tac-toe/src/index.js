@@ -31,6 +31,25 @@ function Status(props){
   return <div>{status}</div>;
 }
 
+
+function History(props) {
+  const moves = props.allHistory.map((step, moveNumber) => {
+    const style = moveNumber === props.selectedMoveNumber ? ' selected-history' : '';
+
+    const desc = moveNumber ?
+      'Go to move #' + (moveNumber + ' ' + props.allHistory[moveNumber].moveDescription) :
+      'Go to game start';
+    return (
+      <li key={moveNumber}>
+        <button className={style}
+                onClick={() => props.onClick(moveNumber)}>
+          {desc}</button>
+      </li>
+    );
+  });
+  return <ol>{moves}</ol>;
+}
+
 class Board extends React.Component {
 
   render() {
@@ -120,8 +139,8 @@ class Game extends React.Component {
   render() {
     const allHistory = this.state.history;
     const selectedMoveNumber = this.state.stepNumber;
+
     const selectedMove = allHistory[selectedMoveNumber];
-    const moves = this.getHistory(allHistory, selectedMoveNumber);
 
     const winner = calculateWinner(selectedMove.squaresStateArray);
     const winningSquares =  winner ? winner.winningSquares : null;
@@ -130,38 +149,21 @@ class Game extends React.Component {
       <div className="game">
         <div className="game-board">
           <Board
-            squaresState = {selectedMove.squaresStateArray}
-            winningSquares = {winningSquares}
-            onClick = { (i) => this.handleClick(i) }
+            squaresState={selectedMove.squaresStateArray}
+            winningSquares={winningSquares}
+            onClick={(i) => this.handleClick(i)}
           />
         </div>
         <div className="game-info">
-          <Status selectedMoveNumber={selectedMoveNumber}
+          <Status selectedMoveNumber = {selectedMoveNumber}
                   winner = {winner}
-                  gameState = {this.state}
-          />
-          <ol>{moves}</ol>
+                  gameState = {this.state}/>
+          <History onClick = {(i) => this.jumpTo(i)}
+                   allHistory = {allHistory}
+                   selectedMove = {selectedMoveNumber}/>
         </div>
       </div>
     );
-  }
-
-
-  getHistory(allHistory, selectedMoveNumber) {
-    const moves = allHistory.map((step, moveNumber) => {
-      const style = moveNumber === selectedMoveNumber ? ' selected-history' : '';
-
-      const desc = moveNumber ?
-        'Go to move #' + (moveNumber + ' ' + allHistory[moveNumber].moveDescription) :
-        'Go to game start';
-      return (
-        <li key={moveNumber}>
-          <button className={style}
-                  onClick={() => this.jumpTo(moveNumber)}>{desc}</button>
-        </li>
-      );
-    });
-    return moves;
   }
 }
 
