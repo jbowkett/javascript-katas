@@ -32,23 +32,68 @@ function Status(props){
 }
 
 
-function History(props) {
-  const moves = props.allHistory.map((step, moveNumber) => {
-    const style = moveNumber === props.selectedMoveNumber ? ' selected-history' : '';
+class History extends React.Component {
 
-    const desc = moveNumber ?
-      'Go to move #' + (moveNumber + ' ' + props.allHistory[moveNumber].moveDescription) :
-      'Go to game start';
+
+  descending = {label : '\\/ Sort Descending \\/', isDescending : true};
+  ascending = {label : '/\\ Sort Ascending /\\', isDescending : false};
+
+  constructor(props) {
+    super(props);
+    this.state = this.descending;
+  }
+
+  toggleSortOrder() {
+    if(this.state.isDescending){
+      this.setState(this.ascending);
+    }
+    else{
+      this.setState(this.descending);
+    }
+  }
+
+
+  render() {
+    const orderedHistory = this.getHistoryInOrder();
     return (
-      <li key={moveNumber}>
-        <button className={style}
-                onClick={() => props.onClick(moveNumber)}>
-          {desc}</button>
-      </li>
+      <div>
+       <button onClick={()=>this.toggleSortOrder()}>
+         {this.state.label}</button>
+       <ol>{orderedHistory}</ol>
+      </div>
     );
-  });
-  return <ol>{moves}</ol>;
+  }
+
+  getHistoryInOrder() {
+    function doMapping(moveNumber, props, moveDesc) {
+      const style = moveNumber === props.selectedMoveNumber ? ' selected-history' : '';
+
+      const desc = moveNumber ?
+        'Go to move #' + (moveNumber + ' ' + moveDesc) :
+        'Go to game start';
+      return (
+        <li key={moveNumber}>
+          <button className={style}
+                  onClick={() => props.onClick(moveNumber)}>
+            {desc}</button>
+        </li>
+      );
+    }
+
+    var allHistory = this.props.allHistory.slice();
+    var mapped = new Array(allHistory.length);
+
+    if(this.state.isDescending) {
+      allHistory = allHistory.reverse();
+    }
+    for (let i = 0; i < allHistory.length; i++) {
+      const moveNumber = this.state.isDescending ? allHistory.length - i - 1: i;
+      mapped[i] = doMapping(moveNumber, this.props, allHistory[i].moveDescription);
+    }
+    return mapped;
+  }
 }
+
 
 class Board extends React.Component {
 
